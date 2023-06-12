@@ -4,7 +4,8 @@ import 'package:collect_data/controllers/ctrl.dart';
 import 'package:collect_data/controllers/ctrl_auth.dart';
 import 'package:collect_data/controllers/ctrl_socket.dart';
 import 'package:collect_data/models/model_response.dart';
-import 'package:collect_data/pages/widgets/widget_loading_users.dart';
+import 'package:collect_data/pages/widgets/widget_progress.dart';
+import 'package:collect_data/sql/models/01_chat.dart';
 import 'package:collect_data/sql/models/02_gift.dart';
 import 'package:collect_data/style/color.dart';
 import 'package:flutter/cupertino.dart';
@@ -26,6 +27,7 @@ class _PageMenuHomeState extends State<PageMenuHome> {
   bool isSet = false;
   TextEditingController ctrlUsername = TextEditingController();
   CtrlAuth ctrlAuth = Get.put(CtrlAuth());
+  CtrlSocket ctrlSocket = Get.put(CtrlSocket());
 
   void save() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -37,6 +39,7 @@ class _PageMenuHomeState extends State<PageMenuHome> {
       });
     }
     if (ctrlUsername.text != '' && license != '' && !isSet) {
+      showDialog(context: context, barrierDismissible: false, builder: (BuildContext context) => const WidgetProgressSubmit());
       GlobalResponse res = await ctrlAuth.actionAccess(context, license, ctrlUsername.text);
       if (res.status) {
         setState(() {
@@ -48,7 +51,7 @@ class _PageMenuHomeState extends State<PageMenuHome> {
 
   @override
   void initState() {
-    ctrlUsername.text = 'upfollowers.gacor';
+    ctrlUsername.text = 'bogormistis';
     save();
     super.initState();
   }
@@ -61,13 +64,18 @@ class _PageMenuHomeState extends State<PageMenuHome> {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<CtrlSocket>(builder: (ctrl) {
-      return Column(
-        children: [cardGift(ctrl), cardSultan(ctrl)],
-      );
+      return !isSet
+          ? setUsername()
+          : Container(
+              color: Colors.transparent,
+              child: Column(
+                children: [cardGift(ctrl.listGiftSql), cardSultan(ctrl.listChatSql)],
+              ),
+            );
     });
   }
 
-  Widget cardGift(CtrlSocket ctrl) {
+  Widget cardGift(List<SqlGift> list) {
     return ResizableDraggableWidget(
       initHeight: 200,
       initWidth: MediaQuery.of(context).size.width * 0.35,
@@ -76,13 +84,11 @@ class _PageMenuHomeState extends State<PageMenuHome> {
       bgColor: Colors.transparent,
       squareColor: Colors.white,
       changed: (width, height, tranformOffset) {
-        print("width: $width, height: $height, tranformOffset: $tranformOffset");
+        // print("width: $width, height: $height, tranformOffset: $tranformOffset");
       },
       child: Container(
         decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(4.0),
-            border: Border.all(color: Colors.blueAccent)),
+            color: Colors.transparent, borderRadius: BorderRadius.circular(4.0), border: Border.all(color: ColorsTheme.primary1.withOpacity(0.2))),
         height: 200,
         width: MediaQuery.of(context).size.width * 0.35,
         child: Column(
@@ -103,9 +109,10 @@ class _PageMenuHomeState extends State<PageMenuHome> {
               child: ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: ctrl.listGiftSql.length,
+                  itemCount: list.length,
                   itemBuilder: (context, index) {
-                    return gift(ctrl.listGiftSql[index]);
+                    // print(ctrl.listGiftSql[index].giftName);
+                    return gift(list[index]);
                   }),
             ),
           ],
@@ -114,7 +121,7 @@ class _PageMenuHomeState extends State<PageMenuHome> {
     );
   }
 
-  Widget cardSultan(CtrlSocket ctrl) {
+  Widget cardSultan(List<SqlChat> list) {
     return ResizableDraggableWidget(
       initHeight: 200,
       initWidth: MediaQuery.of(context).size.width * 0.35,
@@ -123,13 +130,11 @@ class _PageMenuHomeState extends State<PageMenuHome> {
       bgColor: Colors.transparent,
       squareColor: Colors.white,
       changed: (width, height, tranformOffset) {
-        print("width: $width, height: $height, tranformOffset: $tranformOffset");
+        // print("width: $width, height: $height, tranformOffset: $tranformOffset");
       },
       child: Container(
         decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(4.0),
-            border: Border.all(color: Colors.blueAccent)),
+            color: Colors.transparent, borderRadius: BorderRadius.circular(4.0), border: Border.all(color: Colors.orange.withOpacity(0.2))),
         height: 200,
         width: MediaQuery.of(context).size.width * 0.35,
         child: Column(
@@ -140,7 +145,7 @@ class _PageMenuHomeState extends State<PageMenuHome> {
                 children: [
                   Icon(
                     CupertinoIcons.money_dollar,
-                    color: Colors.yellowAccent,
+                    color: Colors.orange,
                   ),
                   Text("List Sultan"),
                 ],
@@ -150,9 +155,9 @@ class _PageMenuHomeState extends State<PageMenuHome> {
               child: ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: 18,
+                  itemCount: list.length,
                   itemBuilder: (context, index) {
-                    return const WidgetLoadingUser();
+                    return sultan(list[index]);
                   }),
             ),
           ],
@@ -228,6 +233,42 @@ class _PageMenuHomeState extends State<PageMenuHome> {
           )),
           const SizedBox(width: 8),
           Image.network(dt.giftPictureUrl, fit: BoxFit.cover),
+        ],
+      ),
+    );
+  }
+
+  Widget sultan(SqlChat dt) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 2, right: 2, top: 2, bottom: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 48,
+            backgroundImage: NetworkImage(dt.profilePictureUrl),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Container(
+            decoration: BoxDecoration(
+              color: ColorsTheme.background2,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            height: 20,
+            width: MediaQuery.of(context).size.width * 1,
+            child: Text(
+              dt.nickname,
+              style: const TextStyle(fontSize: 12),
+            ),
+          )),
+          const SizedBox(width: 8),
+          Text(
+            dt.comment,
+            style: const TextStyle(fontSize: 12),
+          ),
         ],
       ),
     );
