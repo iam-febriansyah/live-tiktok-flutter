@@ -9,6 +9,7 @@ import 'package:collect_data/pages/menus/menu_setting.dart';
 import 'package:flutter/material.dart';
 import 'package:collect_data/style/color.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PageLayout extends StatefulWidget {
   const PageLayout({super.key});
@@ -20,7 +21,7 @@ class PageLayout extends StatefulWidget {
 class _PageLayoutState extends State<PageLayout> {
   CtrlSocket ctrlSocket = Get.put(CtrlSocket());
   int _selectedIndex = 0;
-  String titlePage = 'Chats';
+  String titlePage = 'Please set account';
 
   static const List<Widget> _pages = <Widget>[PageMenuHome(), PageMenuSetting()];
   static const List<String> titlePages = ['Chats', 'Account'];
@@ -35,8 +36,16 @@ class _PageLayoutState extends State<PageLayout> {
     }
   }
 
+  void account() async {
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    setState(() {
+      titlePage = pref.getString("PREF_USERNAME") ?? 'Please set account';
+    });
+  }
+
   @override
   void initState() {
+    account();
     super.initState();
   }
 
@@ -60,6 +69,12 @@ class _PageLayoutState extends State<PageLayout> {
           bottomOpacity: 0,
           elevation: 0,
           actions: [
+            const Padding(
+                padding: EdgeInsets.only(top: 4, bottom: 4),
+                child: Icon(
+                  Icons.refresh,
+                  color: Colors.white,
+                )),
             Padding(
               padding: const EdgeInsets.only(top: 4, bottom: 4, right: 16),
               child: Container(
@@ -77,26 +92,6 @@ class _PageLayoutState extends State<PageLayout> {
         body: Center(
           child: _pages.elementAt(_selectedIndex),
         ),
-        // bottomNavigationBar: BottomNavigationBar(
-        //   unselectedItemColor: ColorsTheme.primary1.withOpacity(0.3),
-        //   selectedItemColor: ColorsTheme.primary1,
-        //   unselectedFontSize: 14,
-        //   items: const <BottomNavigationBarItem>[
-        //     BottomNavigationBarItem(
-        //         icon: Icon(
-        //           Icons.chat_rounded,
-        //           color: ColorsTheme.primary1,
-        //         ),
-        //         label: 'Chats',
-        //         backgroundColor: Colors.green),
-        //     BottomNavigationBarItem(
-        //       icon: Icon(Icons.person_2, color: ColorsTheme.primary1),
-        //       label: 'Account',
-        //     ),
-        //   ],
-        //   currentIndex: _selectedIndex,
-        //   onTap: _onItemTapped,
-        // ),
       );
     });
   }

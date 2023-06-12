@@ -24,14 +24,18 @@ class CtrlSocket extends GetxController {
     var license = pref.getString("PREF_LICENSE") ?? '';
     var oldUsername = pref.getString("PREF_USERNAME") ?? '';
     print('chat_' + userName + '_' + license);
+    socket!.off('chat_' + oldUsername + '_' + license);
+    socket!.off('gift_' + oldUsername + '_' + license);
     socket!.on('chat_' + userName + '_' + license, (data) {
+      print("=========CHAT");
+      // print(data);
       addChatDb(data);
     });
     socket!.on('gift_' + userName + '_' + license, (data) {
+      print("=========GIFT");
+      // print(data);
       addGiftDb(data);
     });
-    socket!.off('chat_' + oldUsername + '_' + license);
-    socket!.off('gift_' + oldUsername + '_' + license);
     pref.setString("PREF_USERNAME", userName);
     update();
   }
@@ -40,18 +44,19 @@ class CtrlSocket extends GetxController {
     try {
       Box<SqlChat> sqlChatBox = Hive.box<SqlChat>('chatBox');
       SqlChat data = SqlChat(
-          chatIdKey: e['chat_id_key'],
-          userId: e['userId'],
-          uniqueId: e['uniqueId'],
-          nickname: e['nickname'],
-          profilePictureUrl: e['profilePictureUrl'],
-          comment: e['comment'],
-          isSubscriber: e['isSubscriber'],
-          followRole: e['followRole'],
-          createdAt: e['createdAt']);
-      sqlChatBox.put(e['chat_id_key'], data);
+          chatIdKey: e['chat_id_key'].toString(),
+          userId: e['userId'].toString(),
+          uniqueId: e['uniqueId'].toString(),
+          nickname: e['nickname'].toString(),
+          profilePictureUrl: e['profilePictureUrl'].toString(),
+          comment: e['comment'].toString(),
+          isSubscriber: e['isSubscriber'].toString(),
+          followRole: e['followRole'].toString(),
+          createdAt: e['createdAt'].toString());
+      sqlChatBox.add(data);
       listChatSql = chatBox.values.toList();
       update();
+      print("CHAT " + listGiftSql.length.toString());
     } catch (e) {
       print(e);
     }
@@ -61,20 +66,21 @@ class CtrlSocket extends GetxController {
     try {
       Box<SqlGift> sqlGiftBox = Hive.box<SqlGift>('giftBox');
       SqlGift data = SqlGift(
-          giftIdKey: e['gift_id_key'],
-          userId: e['userId'],
-          uniqueId: e['uniqueId'],
-          nickname: e['nickname'],
-          profilePictureUrl: e['profilePictureUrl'],
-          giftId: e['gift_id'],
-          repeatCount: e['repeat_count'],
-          giftName: e['giftName'],
-          diamondCount: e['diamondCount'],
-          giftPictureUrl: e['giftPictureUrl'],
-          createdAt: e['createdAt']);
-      sqlGiftBox.put(e['gift_id_key'], data);
+          giftIdKey: e['gift_id_key'].toString(),
+          userId: e['userId'].toString(),
+          uniqueId: e['uniqueId'].toString(),
+          nickname: e['nickname'].toString(),
+          profilePictureUrl: e['profilePictureUrl'].toString(),
+          giftId: e['gift_id'].toString(),
+          repeatCount: e['repeat_count'].toString(),
+          giftName: e['giftName'].toString(),
+          diamondCount: e['diamondCount'].toString(),
+          giftPictureUrl: e['giftPictureUrl'].toString(),
+          createdAt: e['createdAt'].toString());
+      sqlGiftBox.add(data);
       listGiftSql = giftBox.values.toList();
       update();
+      print("GIFT " + listGiftSql.length.toString());
     } catch (e) {
       print(e);
     }
