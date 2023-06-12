@@ -23,6 +23,7 @@ class CtrlSocket extends GetxController {
     SharedPreferences pref = await SharedPreferences.getInstance();
     var license = pref.getString("PREF_LICENSE") ?? '';
     var oldUsername = pref.getString("PREF_USERNAME") ?? '';
+    print('chat_' + userName + '_' + license);
     socket!.on('chat_' + userName + '_' + license, (data) {
       addChatDb(data);
     });

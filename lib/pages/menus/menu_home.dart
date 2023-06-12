@@ -2,8 +2,10 @@
 
 import 'package:collect_data/controllers/ctrl.dart';
 import 'package:collect_data/controllers/ctrl_auth.dart';
+import 'package:collect_data/controllers/ctrl_socket.dart';
 import 'package:collect_data/models/model_response.dart';
 import 'package:collect_data/pages/widgets/widget_loading_users.dart';
+import 'package:collect_data/sql/models/02_gift.dart';
 import 'package:collect_data/style/color.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -46,7 +48,7 @@ class _PageMenuHomeState extends State<PageMenuHome> {
 
   @override
   void initState() {
-    ctrlUsername.text = '';
+    ctrlUsername.text = 'upfollowers.gacor';
     save();
     super.initState();
   }
@@ -58,17 +60,14 @@ class _PageMenuHomeState extends State<PageMenuHome> {
 
   @override
   Widget build(BuildContext context) {
-    return !isSet
-        ? setUsername()
-        : Stack(
-            children: [
-              Transform.translate(offset: const Offset(120, -202), child: cardGift()),
-              Transform.translate(offset: const Offset(120, 5), child: cardSultan()),
-            ],
-          );
+    return GetBuilder<CtrlSocket>(builder: (ctrl) {
+      return Column(
+        children: [cardGift(ctrl), cardSultan(ctrl)],
+      );
+    });
   }
 
-  Widget cardGift() {
+  Widget cardGift(CtrlSocket ctrl) {
     return ResizableDraggableWidget(
       initHeight: 200,
       initWidth: MediaQuery.of(context).size.width * 0.35,
@@ -104,9 +103,9 @@ class _PageMenuHomeState extends State<PageMenuHome> {
               child: ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
-                  itemCount: 18,
+                  itemCount: ctrl.listGiftSql.length,
                   itemBuilder: (context, index) {
-                    return const WidgetLoadingUser();
+                    return gift(ctrl.listGiftSql[index]);
                   }),
             ),
           ],
@@ -115,7 +114,7 @@ class _PageMenuHomeState extends State<PageMenuHome> {
     );
   }
 
-  Widget cardSultan() {
+  Widget cardSultan(CtrlSocket ctrl) {
     return ResizableDraggableWidget(
       initHeight: 200,
       initWidth: MediaQuery.of(context).size.width * 0.35,
@@ -197,6 +196,39 @@ class _PageMenuHomeState extends State<PageMenuHome> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget gift(SqlGift dt) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 2, right: 2, top: 2, bottom: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 48,
+            backgroundImage: NetworkImage(dt.profilePictureUrl),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+              child: Container(
+            decoration: BoxDecoration(
+              color: ColorsTheme.background2,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            height: 20,
+            width: MediaQuery.of(context).size.width * 1,
+            child: Text(
+              dt.nickname,
+              style: const TextStyle(fontSize: 12),
+            ),
+          )),
+          const SizedBox(width: 8),
+          Image.network(dt.giftPictureUrl, fit: BoxFit.cover),
+        ],
       ),
     );
   }
